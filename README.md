@@ -101,6 +101,24 @@ applications:
     haddock3:
         command: haddock3 $config
         config: workflow.cfg
+        allowed_roles:
+            - haddock3:easy
+            - haddock3:expert
+            - haddock3:guru
 ```
 
 This allows the archive generated with the workflow builder to be submitted.
+
+The user can only submit jobs when he/she has any of thee allowed roles.
+A super user should assign a role to the user at http://localhost:3000/admin/users.
+A super user can be made by running `bartender super <email>`.
+
+## Catalogs
+
+This repo has a copy (`./app/catalogs/*.yaml`) of the [haddock3 workflow build catalogs](https://github.com/i-VRESSE/workflow-builder/tree/main/packages/haddock3_catalog/public/catalog).
+
+To fetch the latest catalogs run
+
+```shell
+npm run catalogs
+```

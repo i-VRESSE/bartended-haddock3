@@ -1,4 +1,6 @@
-import { ApiResponse, UsersApi } from "~/bartender-client";
+import type { ApiResponse} from "~/bartender-client";
+import { RolesApi} from "~/bartender-client";
+import { UsersApi } from "~/bartender-client";
 import { AuthApi } from "~/bartender-client/apis/AuthApi";
 import { buildConfig } from "./config.server";
 
@@ -8,6 +10,10 @@ function buildAuthApi(accessToken: string = '') {
 
 function buildUsersApi(accessToken: string) {
     return new UsersApi(buildConfig(accessToken));
+}
+
+function buildRolesApi(accessToken: string) {
+    return new RolesApi(buildConfig(accessToken));
 }
 
 export async function register(email: string, password: string) {
@@ -77,4 +83,58 @@ export async function oauthCallback(provider: string, search: URLSearchParams) {
     }
     const body = await response.raw.json();
     return body.access_token;
+}
+
+export async function getLevel(accessToken: string): Promise<string> {
+    const me = await getCurrentUser(accessToken)
+    const roles = new Set(me.roles);
+    if (roles.has('haddock3:guru')) {
+        return 'guru'
+    } else if (roles.has('haddock3:expert')) {
+        return 'expert'
+    } else if (roles.has('haddock3:easy')) {
+        return 'easy'
+    }
+    return ''
+}
+
+export async function getCurrentUser(accessToken: string) {
+    const api = buildUsersApi(accessToken)
+    return await api.usersCurrentUserUsersMeGet()
+}
+
+export async function listUsers(accessToken: string, limit = 100, offset = 0) {
+    const api = buildUsersApi(accessToken)
+    return await api.listUsersApiUsersGet({limit, offset})
+}
+
+export async function listRoles(accessToken: string) {
+    const api = buildRolesApi(accessToken)
+    return await api.listRolesApiRolesGet()
+}
+
+export async function setSuperUser(accessToken: string, userId: string, checked: boolean) {
+    const api = buildUsersApi(accessToken)
+    return await api.usersPatchUserUsersIdPatch({
+        id: userId,
+        userUpdate: {
+            isSuperuser: checked
+        }
+    })
+}
+
+export async function grantRole(accessToken: string, userId: string, roleId: string) {
+    const api = buildRolesApi(accessToken)
+    api.grantRoleToUserApiRolesRoleIdUserIdPut({
+        userId,
+        roleId
+    })
+}
+
+export async function revokeRole(accessToken: string, userId: string, roleId: string) {
+    const api = buildRolesApi(accessToken)
+    api.revokeRoleFromUserApiRolesRoleIdUserIdDelete({
+        userId,
+        roleId
+    })
 }
